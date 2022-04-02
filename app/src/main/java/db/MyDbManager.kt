@@ -8,7 +8,9 @@ import android.provider.BaseColumns
 import db.MyDbNameClass.COLUMN_NAME_DATE
 import db.MyDbNameClass.COLUMN_NAME_SCORE
 import db.MyDbNameClass.COLUMN_NAME_USER
+import db.MyDbNameClass.COLUMN_NAME_USERNAME
 import db.MyDbNameClass.TABLE_NAME
+import db.MyDbNameClass.TABLE_NAME2
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -23,14 +25,19 @@ class MyDbManager(context: Context) {
     fun insertToDbIfHigher(username:String, score: Int, date: String)
     {
         val List = readDbData();
+        if(List.count()<15) {
+            insertToDb(username, score, date)
+            return
+        }
         for(item in List)
         {
-            if(Integer.parseInt(item.score) < score)
-            {
-                db?.execSQL(" DELETE FROM $TABLE_NAME" +
-                        " WHERE $COLUMN_NAME_SCORE  = (SELECT MIN($COLUMN_NAME_SCORE) FROM $TABLE_NAME LIMIT 1)")
-                insertToDb(username,score, date)
-                break
+            if (Integer.parseInt(item.score) < score) {
+                    db?.execSQL(
+                        " DELETE FROM $TABLE_NAME" +
+                                " WHERE $COLUMN_NAME_SCORE  = (SELECT MIN($COLUMN_NAME_SCORE) FROM $TABLE_NAME LIMIT 1)"
+                    )
+                    insertToDb(username, score, date)
+                    break
             }
 
         }
@@ -39,11 +46,19 @@ class MyDbManager(context: Context) {
     fun insertToDb(username:String, score: Int, date: String)
     {
         val values = ContentValues().apply{
-            put(MyDbNameClass.COLUMN_NAME_USER, username)
-            put(MyDbNameClass.COLUMN_NAME_SCORE, score)
-            put(MyDbNameClass.COLUMN_NAME_DATE, date)
+            put(COLUMN_NAME_USER, username)
+            put(COLUMN_NAME_SCORE, score)
+            put(COLUMN_NAME_DATE, date)
         }
-        db?.insert(MyDbNameClass.TABLE_NAME, null, values)
+        db?.insert(TABLE_NAME, null, values)
+    }
+
+    fun insertToUsersDb(username: String)
+    {
+        val values = ContentValues().apply{
+            put(COLUMN_NAME_USERNAME, username)
+        }
+        db?.insert(TABLE_NAME2, null, values)
     }
 
     @SuppressLint("Range")
@@ -51,11 +66,23 @@ class MyDbManager(context: Context) {
         val dataList = ArrayList<MyDbString>()
         val cursor = db?.query(MyDbNameClass.TABLE_NAME, null,null,null,null,null,COLUMN_NAME_SCORE + " DESC")
         while(cursor?.moveToNext()!!){
-            var dataText = MyDbString()
-            dataText.user = cursor.getString(cursor.getColumnIndex(MyDbNameClass.COLUMN_NAME_USER))
-            dataText.score = cursor.getString(cursor.getColumnIndex(MyDbNameClass.COLUMN_NAME_SCORE))
-            dataText.date = cursor.getString(cursor.getColumnIndex(MyDbNameClass.COLUMN_NAME_DATE))
+            val dataText = MyDbString()
+            dataText.user = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USER))
+            dataText.score = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCORE))
+            dataText.date = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATE))
             dataList.add(dataText)
+        }
+        cursor.close()
+        return dataList
+    }
+
+    @SuppressLint("Range")
+    fun readDbUserData() :ArrayList<String>{
+        val dataList = ArrayList<String>()
+        val cursor = db?.query(TABLE_NAME2, null,null,null,null,null,null)
+        while(cursor?.moveToNext()!!){
+            val userName = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_USERNAME))
+            dataList.add(userName)
         }
         cursor.close()
         return dataList

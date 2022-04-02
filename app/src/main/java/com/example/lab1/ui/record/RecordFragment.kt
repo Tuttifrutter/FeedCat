@@ -24,11 +24,7 @@ class RecordFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
 
-
-    }
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -39,16 +35,18 @@ class RecordFragment : Fragment() {
         _binding = FragmentRecordsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textRecords
+        val userView: TextView = binding.textRecords
         val myDbManager = MyDbManager(requireActivity().applicationContext)
-        onDbRead(myDbManager, textView)
+        onDbRead(myDbManager, userView)
         return root
     }
-    fun onDbRead(dbManager: MyDbManager, view: TextView){
+
+    private fun onDbRead(dbManager: MyDbManager, view: TextView){
         view.text=""
+
         dbManager.openDb()
         val dataList = dbManager.readDbData()
-        view.append("   user   |   score  |   date  \n")
+        view.append("   USER   |   SCORE  |   DATE  \n")
         for(item in dataList){
             view.append(item.user + " | " + item.score + " | " + item.date )
             view.append("\n")
